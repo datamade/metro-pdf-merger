@@ -15,6 +15,7 @@ from uuid import uuid4
 from pickle import loads, dumps
 import logging
 from logging.handlers import RotatingFileHandler
+import traceback
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -59,7 +60,6 @@ def merge_pdfs(slug):
 
     # Send it to another process, and return from the function right away.
     makePacket.delay(slug, file_urls)
-    print("Wheee!!")
 
     return request.data
 
@@ -128,7 +128,7 @@ def queue_daemon(app, rv_ttl=600):
         func, key, args, kwargs = loads(msg[1])
         try:
             rv = func(*args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             tb = traceback.format_exc()
             print(tb)
 
