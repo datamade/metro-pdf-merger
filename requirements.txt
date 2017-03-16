@@ -1,0 +1,4 @@
+Flask==0.12
+Flask-Cors==3.0.2
+PyPDF2==1.26.0
+requests==2.13.0

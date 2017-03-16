@@ -1,4 +1,4 @@
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, send_from_directory
 from flask import send_file, current_app as app
 from flask_cors import cross_origin
 
@@ -29,22 +29,20 @@ def merge_pdfs(slug):
 
     makePacket(slug, file_urls)
 
-    # Do not return until makePacket finishes. DO this in a separate "thread" or in a redis-q. It should return a response almost immediately.
-    # Add some logic to check if the file already exists.
-
-    # Also make a route that returns the file.
+    # Do not return until makePacket finishes. Do this in a separate "thread" or in a redis-q. It should return a response almost immediately.
 
     return request.data
 
 
-@app.route('/document/<ocd_id>.pdf')
+@app.route('/document/<ocd_id>')
 @cross_origin()
 def document(ocd_id):
-    pdfFileObj = open('merged_pdfs/event-0437dc52-b891-4707-8945-5b6af3d080e5.pdf', 'rb')
+    file_path = 'merged_pdfs/' + ocd_id + '.pdf'
+    pdfFileObj = open(file_path, 'rb')
     readFile = pdfFileObj.read()
     output = BytesIO(readFile)
     response = make_response(output.getvalue())
-    response.headers['Content-Type'] = 'application/pdf'
+    response.headers["Content-Disposition"] = 'attachment; filename=%s' % file_path
 
     return response
 
