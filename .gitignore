@@ -1,2 +1,4 @@
 *.pyc
 merged_pdfs/*
+app_config.py
+debug.log
