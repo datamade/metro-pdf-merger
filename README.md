@@ -34,6 +34,14 @@ Run the app locally:
 python app.py
 ```
 
+This app uses [Redis](https://redis.io/), a data store that brokers messages between a sender and receiver. You need to [download Redis](https://redis.io/download), first. Then, you can put Redis to "work." In a new terminal tab, run:
+
+```bash
+python run_worker.py
+```
+
+This module calls `queue_daemon`, a while loop that processes entries in the Redis queue, or in other words, runs the `makePacket` function, which merges and saves the newly consolidated PDFs.
+
 ## Team
 
 * Regina Compton, DataMade - developer

@@ -122,14 +122,13 @@ def makePacket(merged_id, filenames_collection):
     return merger
 
 
-def queue_daemon(app, rv_ttl=500):
+def queue_daemon(app, rv_ttl=600):
     while 1:
         msg = redis.blpop(app.config['REDIS_QUEUE_KEY'])
         func, key, args, kwargs = loads(msg[1])
         try:
             rv = func(*args, **kwargs)
-            rv = {'status': 'ok', 'result': rv}
-        except Exception as e:
+        except Exception, e:
             tb = traceback.format_exc()
             print(tb)
 
