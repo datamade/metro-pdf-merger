@@ -10,11 +10,41 @@ import signal
 import sys
 import requests
 import json
-
+from redis import Redis
+from uuid import uuid4
+from pickle import loads, dumps
 import logging
 from logging.handlers import RotatingFileHandler
 
 app = Flask(__name__)
+app.config.from_object('config')
+
+redis = Redis()
+
+
+class DelayedResult(object):
+    def __init__(self, key):
+        self.key = key
+        self._rv = None
+
+    @property
+    def return_value(self):
+        if self._rv is None:
+            rv = redis.get(self.key) # Return the value at the given key
+            if rv is not None:
+                self._rv = loads(rv) # Reads the pickled object
+        return self._rv
+
+
+def queuefunc(f):
+    def delay(*args, **kwargs):
+        qkey = app.config['REDIS_QUEUE_KEY']
+        key = '%s:result:%s' % (qkey, str(uuid4())) # Creates a key with the REDIS_QUEUE_KEY and a randomly generated UUID.
+        s = dumps((f, key, args, kwargs)) # Pickles together the function and parameters; returns the pickled representation as a string.
+        redis.rpush(app.config['REDIS_QUEUE_KEY'], s) # Push (append) values to the tail of the stored list.
+        return DelayedResult(key)
+    f.delay = delay
+    return f
 
 
 @app.route('/')
@@ -27,9 +57,9 @@ def merge_pdfs(slug):
 
     file_urls = json.loads(request.data.decode())
 
-    makePacket(slug, file_urls)
-
-    # Do not return until makePacket finishes. Do this in a separate "thread" or in a redis-q. It should return a response almost immediately.
+    # Send it to another process, and return from the function right away.
+    makePacket.delay(slug, file_urls)
+    print("Wheee!!")
 
     return request.data
 
@@ -47,6 +77,7 @@ def document(ocd_id):
     return response
 
 
+@queuefunc
 def makePacket(merged_id, filenames_collection):
 
     merger = PdfFileMerger(strict=False)
@@ -91,11 +122,26 @@ def makePacket(merged_id, filenames_collection):
     return merger
 
 
+def queue_daemon(app, rv_ttl=500):
+    while 1:
+        msg = redis.blpop(app.config['REDIS_QUEUE_KEY'])
+        func, key, args, kwargs = loads(msg[1])
+        try:
+            rv = func(*args, **kwargs)
+            rv = {'status': 'ok', 'result': rv}
+        except Exception as e:
+            tb = traceback.format_exc()
+            print(tb)
+
+        if rv is not None:
+            redis.set(key, dumps(rv))
+            redis.expire(key, rv_ttl)
+
+
 if __name__ == "__main__":
     import os
     handler = RotatingFileHandler('debug.log', maxBytes=100000, backupCount=1)
     handler.setLevel(logging.INFO)
     app.logger.addHandler(handler)
 
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', debug=True)
