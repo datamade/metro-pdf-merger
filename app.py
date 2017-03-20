@@ -50,7 +50,7 @@ def queuefunc(f):
 
 @app.route('/')
 def index():
-    return 'The place to find great PDFs.'
+    return 'A flask app that listens for requests from <a href="https://boardagendas.metro.net/" target="_blank">LA Metro Councilmatic</a>. The app consolidates PDFs for Board Reports and Events, stores the merged documents, and provides a route that returns PDFs.'
 
 
 @app.route('/merge_pdfs/<slug>', methods=['POST'])
@@ -58,10 +58,9 @@ def merge_pdfs(slug):
 
     file_urls = json.loads(request.data.decode())
 
-    # Send it to another process, and return from the function right away.
     makePacket.delay(slug, file_urls)
 
-    return request.data
+    return json.dumps({'success': True})
 
 
 @app.route('/document/<ocd_id>')
@@ -79,6 +78,9 @@ def document(ocd_id):
 
 @queuefunc
 def makePacket(merged_id, filenames_collection):
+    # Custom Timeout error: 2 minutes.
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(120)
 
     merger = PdfFileMerger(strict=False)
 
@@ -130,12 +132,17 @@ def queue_daemon(app, rv_ttl=600):
             rv = func(*args, **kwargs)
         except Exception as e:
             tb = traceback.format_exc()
-            print(tb)
+            app.logger.info(tb)
+
+        if redis.llen(app.config['REDIS_QUEUE_KEY']) == 0:
+            app.logger.info("Hurrah! Done merging Metro PDFs.")
 
         if rv is not None:
             redis.set(key, dumps(rv))
             redis.expire(key, rv_ttl)
 
+def timeout_handler(signum, frame):
+    raise Exception("ERROR: Timeout")
 
 if __name__ == "__main__":
     import os
