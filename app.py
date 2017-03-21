@@ -38,8 +38,6 @@ def document(ocd_id):
     response = make_response(output.getvalue())
     response.headers["Content-Disposition"] = 'attachment; filename=%s' % file_path
 
-    logger.info('Response sent')
-
     return response
 
 
