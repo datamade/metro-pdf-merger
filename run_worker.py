@@ -1,7 +1,5 @@
-from flask import Flask
-from app import *
+from tasks import queue_daemon
 
-app = Flask(__name__)
-app.config.from_object('config')
+queue_daemon()
 
-queue_daemon(app)
+
