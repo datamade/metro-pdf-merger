@@ -73,7 +73,16 @@ def makePacket(merged_id, filenames_collection):
                     call(['rm', new_file])
                 else:
                     opened_url = urlopen(filename).read()
-                    merger.append(BytesIO(opened_url), import_bookmarks=False)
+                    try:
+                        merger.append(BytesIO(opened_url), import_bookmarks=False)
+                    except:
+                        # For PDFs with a little extra garbage, we need to open, save, and re-convert them.
+                        call(['unoconv', '-f', 'pdf', filename])
+                        path, keyword, exact_file = filename.partition('attachments/')
+                        new_file = exact_file.split('.')[0] + '.pdf'
+                        f = open(new_file, 'rb')
+                        merger.append(PdfFileReader(f))
+                        call(['rm', new_file])
                 if attempts >= 1:
                     logger.info('Phew! It worked on the second try.')
                     logger.info('\n')
