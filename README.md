@@ -24,7 +24,7 @@ Install unoconv with brew:
 brew install unoconv
 ```
 
-`unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg)
+`unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or go [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
 
 ## Get started
 
