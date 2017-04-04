@@ -5,14 +5,16 @@ from flask_cors import cross_origin
 from io import BytesIO
 import json
 from redis import Redis
+from raven.contrib.flask import Sentry
 
+from config import SENTRY_DSN
 from tasks import makePacket
 
 app = Flask(__name__)
 app.config.from_object('config')
 
 redis = Redis()
-
+sentry = Sentry(app, dsn=SENTRY_DSN)
 
 @app.route('/')
 def index():

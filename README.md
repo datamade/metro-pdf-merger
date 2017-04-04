@@ -26,6 +26,29 @@ brew install unoconv
 
 `unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or go [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
 
+
+### Ubuntu
+
+Do not install the entire LibreOffice package. Just install libre0office-common:
+```bash
+apt-get install libreoffice-script-provider-python
+```
+
+Then, install unoconv from source:
+```bash
+mkdir unoconv
+cd unoconv
+wget https://raw.githubusercontent.com/dagwieers/unoconv/master/unoconv
+# Make a symbolic link
+sudo ln -s /home/ubuntu/unoconv/unoconv /usr/bin/unoconv
+```
+
+In the unoconv file, specify the location of Python:
+
+```
+#!/usr/bin/python3
+```
+
 ## Get started
 
 Run the app locally:
@@ -61,8 +84,6 @@ Report it here: https://github.com/datamade/nyc-councilmatic/issues
 ## Copyright
 
 Copyright (c) 2017 DataMade. Released under the [MIT License](https://github.com/datamade/nyc-councilmatic/blob/master/LICENSE).
-
-
 
 
 

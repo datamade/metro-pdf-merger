@@ -17,13 +17,15 @@ import logging
 import logging.config
 import traceback
 import os
+from raven import Client
 
-from config import REDIS_QUEUE_KEY, LOGGING
+from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN
 
 redis = Redis()
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
+client = Client(SENTRY_DSN)
 
 
 class DelayedResult(object):
@@ -94,9 +96,11 @@ def makePacket(merged_id, filenames_collection):
                     logger.info('Trying again...')
                 else:
                     logger.error(("Something went wrong. Please look at {}. \n").format(filename))
+                    client.captureException()
             except:
                 attempts += 1
                 logger.error(("\n Unexpected error: {}").format(sys.exc_info()[0]))
+                client.captureException()
 
     # 'merger' is a PdfFileMerger object, which can be written to a new file like so:
     try:
@@ -104,6 +108,7 @@ def makePacket(merged_id, filenames_collection):
         logger.info(("Successful merge! {}").format(merged_id))
     except:
         logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
+        client.captureException()
 
     return merger
 
@@ -118,6 +123,7 @@ def queue_daemon():
         except Exception as e:
             tb = traceback.format_exc()
             logger.info(tb)
+            client.captureException()
 
         if redis.llen(REDIS_QUEUE_KEY) == 0:
             logger.info("Hurrah! Done merging Metro PDFs.")
