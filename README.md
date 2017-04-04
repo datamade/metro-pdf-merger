@@ -4,6 +4,12 @@ A flask app that listens for requests from [LA Metro Councilmatic](https://githu
 
 ## Set up
 
+Copy the config.py.example file. It has everything you need to run the app. If you want to configure the app with Sentry, then find your DSN Client key and assign its value to SENTRY_DSN.
+
+```bash
+cp config.py.example config.py
+```
+
 Create a [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/):
 
 ```bash
@@ -24,12 +30,12 @@ Install unoconv with brew:
 brew install unoconv
 ```
 
-`unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or go [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
+`unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
 
 
 ### Ubuntu
 
-Do not install the entire LibreOffice package. Just install libre0office-common:
+Keep your server safe from attacks (smaller surface area for invasion) and free of the heavy-weight packaging in the full LibreOffice suite. Just install libreoffice-script-provider-python:
 ```bash
 apt-get install libreoffice-script-provider-python
 ```
