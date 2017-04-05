@@ -70,7 +70,9 @@ def makePacket(merged_id, filenames_collection):
                     # call(['unoconv', '-f', 'pdf', filename])
                     try:
                         check_output(['unoconv', '-f', 'pdf', filename])
+                        logger.info('Success!')
                     except CalledProcessError as call_err:
+                        logger.info("CalledProcessError")
                         logger.info(call_err.output, call_err.return_code)
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
