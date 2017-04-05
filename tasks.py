@@ -5,7 +5,7 @@ from flask_cors import cross_origin
 from PyPDF2 import PdfFileMerger, PdfFileReader
 from urllib.request import urlopen
 from io import BytesIO
-from subprocess import call
+from subprocess import call, check_output, CalledProcessError
 import signal
 import sys
 import requests
@@ -67,7 +67,11 @@ def makePacket(merged_id, filenames_collection):
         while attempts < 2:
             try:
                 if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')):
-                    call(['unoconv', '-f', 'pdf', filename])
+                    # call(['unoconv', '-f', 'pdf', filename])
+                    try:
+                        check_output(['unoconv', '-f', 'pdf', filename])
+                    except CalledProcessError as call_err:
+                        logger.info(call_err.output, call_err.return_code)
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
                     f = open(new_file, 'rb')
@@ -88,7 +92,6 @@ def makePacket(merged_id, filenames_collection):
                 if attempts >= 1:
                     logger.info('Phew! It worked on the second try.')
                     logger.info('\n')
-                break
             except Exception as err:
                 attempts += 1
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
