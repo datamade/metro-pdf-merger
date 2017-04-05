@@ -5,7 +5,7 @@ from flask_cors import cross_origin
 from PyPDF2 import PdfFileMerger, PdfFileReader
 from urllib.request import urlopen
 from io import BytesIO
-from subprocess import call, check_output, CalledProcessError
+from subprocess import call
 import signal
 import sys
 import requests
@@ -18,6 +18,7 @@ import logging.config
 import traceback
 import os
 from raven import Client
+from subprocess import call, check_call, check_output, CalledProcessError
 
 from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN
 
@@ -69,11 +70,14 @@ def makePacket(merged_id, filenames_collection):
                 if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')):
                     # call(['unoconv', '-f', 'pdf', filename])
                     try:
+                        logger.info('Unoconv conversion underway...')
                         check_output(['unoconv', '-f', 'pdf', filename])
-                        logger.error('Success!!')
+                        logger.info('Successful conversion!')
                     except CalledProcessError as call_err:
-                        logger.error("CalledProcessError")
-                        logger.error(call_err.output, call_err.return_code)
+                        logger.info('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
+                        logger.info(call_err)
+                        # logger.info(call_err.output) No output....
+
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
                     f = open(new_file, 'rb')
@@ -94,6 +98,7 @@ def makePacket(merged_id, filenames_collection):
                 if attempts >= 1:
                     logger.info('Phew! It worked on the second try.')
                     logger.info('\n')
+                break
             except Exception as err:
                 attempts += 1
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
