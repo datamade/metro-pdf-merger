@@ -91,6 +91,10 @@ MERGER_BASE_URL = 'http://0.0.0.0:5000'
 Then, run the management command in your LA Metro repo:
 
 ```python
+# Grab all bill documents
+python manage.py compile_pdfs --all_documents
+
+# Grab only the most recently added documents
 python manage.py compile_pdfs
 ```
 
