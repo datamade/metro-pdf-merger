@@ -32,14 +32,14 @@ Install unoconv with brew:
 brew install unoconv
 ```
 
-When installed with Homebrew, `unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
+The brew installation comes with a caveat: `unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
 
 
 #### Ubuntu
 
-On Linux, but also in any operting system, you may chose to partially install OfficeLibre, which helps to keep your server safe from attacks (smaller surface area for potential invasion) and free of the heavy-weight packaging in the full LibreOffice suite.
+On Linux, but also on any operting system, you may chose to partially install LibreOffice, which helps to keep your server safe from attacks (smaller surface area for potential invasion) and free of the heavy-weight packaging in the full LibreOffice suite.
 
-Install libreoffice-script-provider-python and the necessary packages from OfficeLibre:
+Install libreoffice-script-provider-python and the necessary packages from LibreOffice:
 
 ```bash
 apt-get install libreoffice-script-provider-python
