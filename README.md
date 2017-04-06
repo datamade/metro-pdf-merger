@@ -24,23 +24,32 @@ pip install -r requirements.txt
 
 The Metro PDF Merger uses [unoconv](https://github.com/dagwieers/unoconv), a CLI tool that performs document conversions; it reads any document type supported by LibreOffice.
 
+#### Mac OS
+
 Install unoconv with brew:
 
 ```bash
 brew install unoconv
 ```
 
-`unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
+When installed with Homebrew, `unoconv` works only with LibreOffice versions 3.6.0.1 - 4.3.x. [Get the DMG file for version 4.3.](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/LibreOffice_4.3.7.2_MacOS_x86-64.dmg) Or [visit here](https://downloadarchive.documentfoundation.org/libreoffice/old/4.3.7.2/mac/x86_64/).
 
 
-### Ubuntu
+#### Ubuntu
 
-Keep your server safe from attacks (smaller surface area for invasion) and free of the heavy-weight packaging in the full LibreOffice suite. Just install libreoffice-script-provider-python:
+On Linux, but also in any operting system, you may chose to partially install OfficeLibre, which helps to keep your server safe from attacks (smaller surface area for potential invasion) and free of the heavy-weight packaging in the full LibreOffice suite.
+
+Install libreoffice-script-provider-python and the necessary packages from OfficeLibre:
+
 ```bash
 apt-get install libreoffice-script-provider-python
+apt-get install libreoffice-writer
+apt-get install libreoffice-calc
+apt-get install libreoffice-impress
 ```
 
 Then, install unoconv from source:
+
 ```bash
 mkdir unoconv
 cd unoconv
@@ -70,6 +79,20 @@ python run_worker.py
 ```
 
 This module calls `queue_daemon`, a while loop that processes entries in the Redis queue, or in other words, runs the `makePacket` function, which merges and saves the newly consolidated PDFs.
+
+This app serves the needs of LA Metro Councilmatic. Learn about setting up an instance of [LA Metro Councilmatic](https://github.com/datamade/la-metro-councilmatic). LA Metro comes with a management command that queries the Metro database and sends post requests. Each request carries a JSON object, which contains URLs that point to bill documents on Legistar (i.e., the documents that metro-pdf-merger consolidates).
+
+In the LA Metro repo, find `settings.py` and change MERGER_BASE_URL. It should point to your flask app, for instance:
+
+```
+MERGER_BASE_URL = 'http://0.0.0.0:5000'
+```
+
+Then, run the management command in your LA Metro repo:
+
+```python
+python manage.py compile_pdfs
+```
 
 ## Team
 
