@@ -67,7 +67,7 @@ def makePacket(merged_id, filenames_collection):
         attempts = 0
         while attempts < 2:
             try:
-                if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')):
+                if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')) or filename in ['http://metro.legistar1.com/metro/attachments/6aaadb7d-4c9a-429b-a499-2107bc9d031e.pdf', 'http://metro.legistar1.com/metro/attachments/2146cf74-8a70-4d48-8a73-94f21a40106d.pdf', 'http://metro.legistar1.com/metro/attachments/c1fae640-108f-411d-9790-204eb7b9efbb.pdf']:
                     # call(['unoconv', '-f', 'pdf', filename])
                     try:
                         logger.info('Unoconv conversion underway...')
