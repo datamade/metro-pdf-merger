@@ -35,11 +35,15 @@ def merge_pdfs(slug):
 @cross_origin()
 def document(ocd_id):
     file_path = 'merged_pdfs/' + ocd_id + '.pdf'
-    pdfFileObj = open(file_path, 'rb')
-    readFile = pdfFileObj.read()
-    output = BytesIO(readFile)
-    response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = 'attachment; filename=%s' % file_path
+
+    try:
+        pdfFileObj = open(file_path, 'rb')
+        readFile = pdfFileObj.read()
+        output = BytesIO(readFile)
+        response = make_response(output.getvalue())
+        response.headers["Content-Disposition"] = 'attachment; filename=%s' % file_path
+    except FileNotFoundError: 
+        response = make_response('Document not found', 404)
 
     return response
 
