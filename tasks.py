@@ -121,6 +121,7 @@ def makePacket(merged_id, filenames_collection):
         bucket = s3.Bucket(S3_BUCKET)
         s3_key = bucket.Object('{id}.pdf'.format(id=merged_id))
         s3_key.upload_fileobj(merged)
+        s3_key.Acl().put(ACL='public-read')
 
         logger.info(("Successful merge! {}").format(merged_id))
     except:
