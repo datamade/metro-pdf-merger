@@ -134,7 +134,7 @@ def queue_daemon():
 
     from deployment import DEPLOYMENT_ID
 
-    with open('/tmp/worker_running.txt', 'r') as f:
+    with open('/tmp/worker_running.txt', 'w') as f:
         f.write(DEPLOYMENT_ID)
 
     while 1:
