@@ -133,10 +133,15 @@ def makePacket(merged_id, filenames_collection):
 
 def queue_daemon():
 
-    from deployment import DEPLOYMENT_ID
+    try:
+        # This is really only needed for deployments
+        # There might be a better way of doing this
+        from deployment import DEPLOYMENT_ID
 
-    with open('/tmp/worker_running.txt', 'w') as f:
-        f.write(DEPLOYMENT_ID)
+        with open('/tmp/worker_running.txt', 'w') as f:
+            f.write(DEPLOYMENT_ID)
+    except ImportError:
+        pass
 
     while 1:
 
