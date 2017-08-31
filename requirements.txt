@@ -4,3 +4,4 @@ PyPDF2==1.26.0
 requests==2.13.0
 redis==2.10.5
 raven[flask]
+gunicorn==19.7.1
