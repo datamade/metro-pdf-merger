@@ -1,5 +1,4 @@
-from flask import Flask, request, make_response, send_from_directory, Response
-from flask import send_file, current_app as app
+from flask import Flask, request, make_response, abort
 from flask_cors import cross_origin
 
 from io import BytesIO
@@ -18,9 +17,21 @@ app.config.from_object('config')
 redis = Redis()
 sentry = Sentry(app, dsn=SENTRY_DSN)
 
+
 @app.route('/')
 def index():
     return 'A flask app that listens for requests from <a href="https://boardagendas.metro.net/" target="_blank">LA Metro Councilmatic</a>. The app consolidates PDFs for Board Reports and Events, stores the merged documents, and provides a route that returns PDFs.'
+
+
+@app.route('/pong/')
+def pong():
+
+    try:
+        from deployment import DEPLOYMENT_ID
+    except ImportError:
+        abort(401)
+
+    return DEPLOYMENT_ID
 
 
 @app.route('/merge_pdfs/<slug>', methods=['POST'])

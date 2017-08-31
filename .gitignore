@@ -7,3 +7,8 @@ merged_pdfs/*
 /keyrings/live/secring.gpg
 
 config.py
+/configs/config.py
+/configs/nginx_template.conf
+/configs/supervisor_template.conf
+/scripts/after_install.sh
+/scripts/app_start.sh
