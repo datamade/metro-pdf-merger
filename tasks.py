@@ -17,7 +17,9 @@ from raven import Client
 
 from subprocess import check_output, CalledProcessError
 
-from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN
+import boto3
+
+from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN, S3_BUCKET
 
 redis = Redis()
 
@@ -111,7 +113,15 @@ def makePacket(merged_id, filenames_collection):
 
     # 'merger' is a PdfFileMerger object, which can be written to a new file like so:
     try:
-        merger.write('merged_pdfs/' + merged_id + '.pdf')
+        merged = BytesIO()
+        merger.write(merged)
+        merged.seek(0)
+
+        s3 = boto3.resource('s3')
+        bucket = s3.Bucket(S3_BUCKET)
+        s3_key = bucket.Object('{id}.pdf'.format(id=merged_id))
+        s3_key.upload_fileobj(merged)
+
         logger.info(("Successful merge! {}").format(merged_id))
     except:
         logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))

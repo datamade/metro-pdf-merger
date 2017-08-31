@@ -5,8 +5,10 @@ from io import BytesIO
 import json
 from redis import Redis
 from raven.contrib.flask import Sentry
+import boto3
+import botocore
 
-from config import SENTRY_DSN
+from config import SENTRY_DSN, S3_BUCKET
 from tasks import makePacket
 
 app = Flask(__name__)
@@ -45,15 +47,26 @@ def merge_pdfs(slug):
 @app.route('/document/<ocd_id>')
 @cross_origin()
 def document(ocd_id):
-    file_path = 'merged_pdfs/' + ocd_id + '.pdf'
+
+    client = boto3.client('s3')
+    document = client.get_object(Bucket=S3_BUCKET,
+                                 Key='{}.pdf'.format(ocd_id))
+
+    # This closure just iterates the streaming response from S3 into a
+    # streaming response from this route. That way we don't have to read
+    # anything into memory
+
+    def generate_response(doc):
+        while True:
+            yield doc.read(4096)
 
     try:
-        pdfFileObj = open(file_path, 'rb')
-        readFile = pdfFileObj.read()
-        output = BytesIO(readFile)
-        response = make_response(output.getvalue())
-        response.headers["Content-Disposition"] = 'attachment; filename=%s' % file_path
-    except FileNotFoundError:
+
+        response = Response(generate_response(document['Body']))
+        response.headers["Content-Disposition"] = 'attachment; filename={}.pdf'.format(ocd_id)
+        response.headers['Content-Length'] = document['ContentLength']
+
+    except botocore.exceptions.ClientError as e:
         response = make_response('Document not found', 404)
 
     return response
