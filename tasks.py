@@ -1,24 +1,21 @@
-from flask import Flask, request, make_response, send_from_directory
-from flask import send_file, current_app as app
-from flask_cors import cross_origin
-
-from PyPDF2 import PdfFileMerger, PdfFileReader
 from urllib.request import urlopen
 from io import BytesIO
 from subprocess import call
 import signal
 import sys
-import requests
-import json
-from redis import Redis
 from uuid import uuid4
 from pickle import loads, dumps
 import logging
 import logging.config
 import traceback
-import os
+
+from redis import Redis
+
+from PyPDF2 import PdfFileMerger, PdfFileReader
+
 from raven import Client
-from subprocess import call, check_call, check_output, CalledProcessError
+
+from subprocess import check_output, CalledProcessError
 
 from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN
 
@@ -37,18 +34,18 @@ class DelayedResult(object):
     @property
     def return_value(self):
         if self._rv is None:
-            rv = redis.get(self.key) # Return the value at the given key
+            rv = redis.get(self.key)  # Return the value at the given key
             if rv is not None:
-                self._rv = loads(rv) # Reads the pickled object
+                self._rv = loads(rv)  # Reads the pickled object
         return self._rv
 
 
 def queuefunc(f):
     def delay(*args, **kwargs):
         qkey = REDIS_QUEUE_KEY
-        key = '%s:result:%s' % (qkey, str(uuid4())) # Creates a key with the REDIS_QUEUE_KEY and a randomly generated UUID.
-        s = dumps((f, key, args, kwargs)) # Pickles together the function and parameters; returns the pickled representation as a string.
-        redis.rpush(REDIS_QUEUE_KEY, s) # Push (append) values to the tail of the stored list.
+        key = '%s:result:%s' % (qkey, str(uuid4()))  # Creates a key with the REDIS_QUEUE_KEY and a randomly generated UUID.
+        s = dumps((f, key, args, kwargs))  # Pickles together the function and parameters; returns the pickled representation as a string.
+        redis.rpush(REDIS_QUEUE_KEY, s)  # Push (append) values to the tail of the stored list.
         return DelayedResult(key)
     f.delay = delay
     return f
@@ -124,12 +121,18 @@ def makePacket(merged_id, filenames_collection):
 
 
 def queue_daemon():
+
+    from deployment import DEPLOYMENT_ID
+
+    with open('/tmp/worker_running.txt', 'r') as f:
+        f.write(DEPLOYMENT_ID)
+
     while 1:
 
         msg = redis.blpop(REDIS_QUEUE_KEY)
         func, key, args, kwargs = loads(msg[1])
         try:
-            rv = func(*args, **kwargs)
+            func(*args, **kwargs)
         except Exception as e:
             tb = traceback.format_exc()
             logger.info(tb)

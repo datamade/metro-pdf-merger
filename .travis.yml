@@ -1,0 +1,29 @@
+branches:
+  only:
+  - master
+language: python
+python:
+- '3.5'
+install:
+- pip install --upgrade pip
+- pip install -r requirements.txt
+dist: trusty
+sudo: false
+before_script:
+- cp configs/config.py.travis config.py
+script:
+- flake8 --ignore=E501
+notifications:
+  webhooks:
+  - https://semabot.datamade.us/travis/
+deploy:
+  provider: codedeploy
+  access_key_id: AKIAJNYGDLOJKHOUWCAA
+  secret_access_key:
+    secure: NQFpnKx8CnlVwbmTbjKoKJgpX73P2Y+jAgzUO3e3IKTobW8YMQC7sHu6fQh1Fwy7GWtz7IfrhXrcTncZ5KBd8oKha8Rj3dP2ILxAYily+7w2o8WhvlTL8rKMAnqh0oRjCvL683aDvnGQU+dARgN8TviExKqDlZN3GhMjRoo37VFCiPhnB9SngHhcrI1CTcwxP5tzljVYTSMK7h3wlMIoSX/JoMiAH4W9e9SKG3mrxEO2P58/12AHJMWsfVxFh/BOiQuB2HNLHmxTJTgqAVsqn03BEq8BUYHCZuPn8hnvevooRLPZ5KHPt2Tt8hRRJSw0yPIBaNvteU66IIUzA3jEacT/oiN/PiTFQLgRZbN4OBztKD/D6R8y1WLW10WRfsZRrluL1wogF+ubNC+awK8LVwyXrcNfuCHPwQqgY07jewQQM7Dnl/efluNdBqP/+LqYsAujNq1+nKnlvmRKuMTFM8rEto1h+1mqWIExRw9sQgAG2chvfqGXUqLSG8eBsyiEzoRWVunt/i4QnmRJEg4G6lp3wGtGYS5i3EEEomP+ZijO1SLKjqeKS1gzHNC1Oo6eEi+FZ/bnWeoYcfqegaiZRQAivf5HjNgB/EcnW3Ucc9eR96gF4Xn5LT/shOykulYdAelIr0T9NICJnIed5OOmgdovZKvPOmqI+YtmoE1v4gM=
+  revision_type: github
+  application: metro-pdf-merger
+  deployment_group: staging
+  on:
+    branch:
+      - master
