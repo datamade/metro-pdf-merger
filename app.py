@@ -1,7 +1,6 @@
-from flask import Flask, request, make_response, abort
+from flask import Flask, request, make_response, abort, Response
 from flask_cors import cross_origin
 
-from io import BytesIO
 import json
 from redis import Redis
 from raven.contrib.flask import Sentry
