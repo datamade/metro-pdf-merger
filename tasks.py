@@ -82,8 +82,8 @@ def makePacket(merged_id, filenames_collection):
                     merger.append(PdfFileReader(f))
                     call(['rm', new_file])
                 else:
-                    opened_url = urlopen(filename).read()                    
-                    try:    
+                    opened_url = urlopen(filename).read()
+                    try:
                         merger.append(BytesIO(opened_url), import_bookmarks=False)
                     except:
                         # For PDFs with a little extra garbage, we need to open, save, and re-convert them.
@@ -104,7 +104,7 @@ def makePacket(merged_id, filenames_collection):
             except FileNotFoundError as err:
                 attempts += 1
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
-                error_logging(attempts, filename) 
+                error_logging(attempts, filename)
 
     # 'merger' is a PdfFileMerger object, which can be written to a new file like so:
     try:

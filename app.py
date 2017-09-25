@@ -54,7 +54,6 @@ def document(ocd_id):
     # This closure just iterates the streaming response from S3 into a
     # streaming response from this route. That way we don't have to read
     # anything into memory
-
     def generate_response(doc):
         while True:
             yield doc.read(4096)
