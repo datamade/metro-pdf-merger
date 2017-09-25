@@ -1,4 +1,5 @@
 from urllib.request import urlopen
+from urllib.error import HTTPError
 from io import BytesIO
 from subprocess import call
 import signal
@@ -67,7 +68,6 @@ def makePacket(merged_id, filenames_collection):
         while attempts < 2:
             try:
                 if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')) or filename in ['http://metro.legistar1.com/metro/attachments/6aaadb7d-4c9a-429b-a499-2107bc9d031e.pdf', 'http://metro.legistar1.com/metro/attachments/2146cf74-8a70-4d48-8a73-94f21a40106d.pdf', 'http://metro.legistar1.com/metro/attachments/c1fae640-108f-411d-9790-204eb7b9efbb.pdf']:
-                    # call(['unoconv', '-f', 'pdf', filename])
                     try:
                         logger.info('Unoconv conversion underway...')
                         check_output(['unoconv', '-f', 'pdf', filename])
@@ -75,7 +75,6 @@ def makePacket(merged_id, filenames_collection):
                     except CalledProcessError as call_err:
                         logger.info('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
                         logger.info(call_err)
-                        # logger.info(call_err.output) No output....
 
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
@@ -98,18 +97,14 @@ def makePacket(merged_id, filenames_collection):
                     logger.info('Phew! It worked on the second try.')
                     logger.info('\n')
                 break
-            except Exception as err:
+            except HTTPError as err:
                 attempts += 1
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
-                if attempts < 2:
-                    logger.info('Trying again...')
-                else:
-                    logger.error(("Something went wrong. Please look at {}. \n").format(filename))
-                    client.captureException()
-            except:
+                error_logging(attempts, filename)
+            except FileNotFoundError as err:
                 attempts += 1
-                logger.error(("\n Unexpected error: {}").format(sys.exc_info()[0]))
-                client.captureException()
+                logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
+                error_logging(attempts, filename)
 
     # 'merger' is a PdfFileMerger object, which can be written to a new file like so:
     try:
@@ -160,3 +155,11 @@ def queue_daemon():
 
 def timeout_handler(signum, frame):
     raise Exception("ERROR: Timeout")
+
+
+def error_logging(attempts, filename):
+    if attempts < 2:
+        logger.info('Trying again...')
+    else:
+        logger.error(("Something went wrong. Please look at {}. \n").format(filename))
+        client.captureException()

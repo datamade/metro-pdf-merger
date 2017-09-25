@@ -54,7 +54,6 @@ def document(ocd_id):
     # This closure just iterates the streaming response from S3 into a
     # streaming response from this route. That way we don't have to read
     # anything into memory
-
     def generate_response(doc):
         while True:
             yield doc.read(4096)
@@ -65,7 +64,7 @@ def document(ocd_id):
         response.headers["Content-Disposition"] = 'attachment; filename={}.pdf'.format(ocd_id)
         response.headers['Content-Length'] = document['ContentLength']
 
-    except botocore.exceptions.ClientError as e:
+    except botocore.exceptions.BotoCoreError as e:
         response = make_response('Document not found', 404)
 
     return response
