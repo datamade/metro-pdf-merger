@@ -144,7 +144,6 @@ def queue_daemon():
         func, key, args, kwargs = loads(msg[1])
         try:
             func(*args, **kwargs)
-        # Do not make this a naked expcetion...we should be able to kill the merger.
         except Exception as e:
             tb = traceback.format_exc()
             logger.info(tb)
