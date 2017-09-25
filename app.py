@@ -64,7 +64,7 @@ def document(ocd_id):
         response.headers["Content-Disposition"] = 'attachment; filename={}.pdf'.format(ocd_id)
         response.headers['Content-Length'] = document['ContentLength']
 
-    except botocore.exceptions.ClientError as e:
+    except botocore.exceptions.BotoCoreError as e:
         response = make_response('Document not found', 404)
 
     return response
