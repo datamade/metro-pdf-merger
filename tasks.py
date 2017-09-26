@@ -157,7 +157,7 @@ class ParentProcessor(threading.Thread):
 
         if redis.llen(REDIS_QUEUE_KEY) == 0:
             logger.info("Hurrah! Done merging Metro PDFs.")
-        
+
 
 def queue_daemon():
     try:
@@ -178,7 +178,7 @@ def queue_daemon():
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signalHandler)
-    signal.signal(signal.SIGTERM, signalHandler)  
+    signal.signal(signal.SIGTERM, signalHandler)
 
     logger.info('Starting worker')
     worker.start()
