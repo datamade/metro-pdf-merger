@@ -48,24 +48,23 @@ def merge_pdfs(slug):
 def document(ocd_id):
 
     client = boto3.client('s3')
-    document = client.get_object(Bucket=S3_BUCKET,
-                                 Key='{}.pdf'.format(ocd_id))
-
-    # This closure just iterates the streaming response from S3 into a
-    # streaming response from this route. That way we don't have to read
-    # anything into memory
-    def generate_response(doc):
-        while True:
-            yield doc.read(4096)
 
     try:
+        document = client.get_object(Bucket=S3_BUCKET,
+                                     Key='{}.pdf'.format(ocd_id))
+    except botocore.exceptions.ClientError:
+        response = make_response('Document not found', 404)
+    else:
+        # This closure just iterates the streaming response from S3 into a
+        # streaming response from this route. That way we don't have to read
+        # anything into memory
+        def generate_response(doc):
+            while True:
+                yield doc.read(4096)
 
         response = Response(generate_response(document['Body']))
         response.headers["Content-Disposition"] = 'attachment; filename={}.pdf'.format(ocd_id)
         response.headers['Content-Length'] = document['ContentLength']
-
-    except botocore.exceptions.BotoCoreError as e:
-        response = make_response('Document not found', 404)
 
     return response
 
