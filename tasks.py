@@ -2,6 +2,7 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from io import BytesIO
 from subprocess import call
+import threading
 import signal
 import sys
 from uuid import uuid4
@@ -126,6 +127,30 @@ def makePacket(merged_id, filenames_collection):
     return merger
 
 
+# Instance of the threading class
+class ProcessMessage(threading.Thread):
+    stopper = None
+
+    def __init__(self, stopper, channel, **kwargs):
+        super().__init__(**kwargs)
+
+        self.stopper = stopper
+
+    def run(self):
+        logger.info('Listening for messages...')
+        while not self.stopper.is_set():
+            self.doWork()
+
+    def doWork(self):
+        msg = redis.blpop(REDIS_QUEUE_KEY)
+        func, key, args, kwargs = loads(msg[1])
+        
+        func(*args, **kwargs)
+
+        if redis.llen(REDIS_QUEUE_KEY) == 0:
+            logger.info("Hurrah! Done merging Metro PDFs.")
+
+
 def queue_daemon():
 
     try:
@@ -138,19 +163,38 @@ def queue_daemon():
     except ImportError:
         pass
 
-    while 1:
+    # Rather than a "while"...create an instance of a threading class....then, include a signalHandler closure...
+    # while 1:
+    #     # get work
+    #     msg = redis.blpop(REDIS_QUEUE_KEY)
+    #     func, key, args, kwargs = loads(msg[1])
+    #     try:
+    #         #  do work
+    #         func(*args, **kwargs)
+    #     except Exception as e:
+    #         tb = traceback.format_exc()
+    #         logger.info(tb)
+    #         client.captureException()
 
-        msg = redis.blpop(REDIS_QUEUE_KEY)
-        func, key, args, kwargs = loads(msg[1])
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            tb = traceback.format_exc()
-            logger.info(tb)
-            client.captureException()
+    #     if redis.llen(REDIS_QUEUE_KEY) == 0:
+    #         logger.info("Hurrah! Done merging Metro PDFs.")
 
-        if redis.llen(REDIS_QUEUE_KEY) == 0:
-            logger.info("Hurrah! Done merging Metro PDFs.")
+    import signal
+    stopper = threading.Event()
+    worker = ProcessMessage(stopper, 'worker')
+
+    def signalHandler(signum, frame):
+        stopper.set()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, signalHandler)
+    signal.signal(signal.SIGTERM, signalHandler)
+
+    logger.info('Starting worker')
+    worker.start()
+
+
+
 
 
 def timeout_handler(signum, frame):
