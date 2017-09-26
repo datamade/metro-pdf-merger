@@ -57,10 +57,6 @@ def queuefunc(f):
 
 @queuefunc
 def makePacket(merged_id, filenames_collection):
-    # Custom Timeout error: 2 minutes.
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(120)
-
     merger = PdfFileMerger(strict=False)
 
     for filename in filenames_collection:
@@ -126,7 +122,6 @@ def makePacket(merged_id, filenames_collection):
 
     return merger
 
-
 # Instance of the threading class
 class ProcessMessage(threading.Thread):
     stopper = None
@@ -152,7 +147,6 @@ class ProcessMessage(threading.Thread):
 
 
 def queue_daemon():
-
     try:
         # This is really only needed for deployments
         # There might be a better way of doing this
@@ -163,23 +157,6 @@ def queue_daemon():
     except ImportError:
         pass
 
-    # Rather than a "while"...create an instance of a threading class....then, include a signalHandler closure...
-    # while 1:
-    #     # get work
-    #     msg = redis.blpop(REDIS_QUEUE_KEY)
-    #     func, key, args, kwargs = loads(msg[1])
-    #     try:
-    #         #  do work
-    #         func(*args, **kwargs)
-    #     except Exception as e:
-    #         tb = traceback.format_exc()
-    #         logger.info(tb)
-    #         client.captureException()
-
-    #     if redis.llen(REDIS_QUEUE_KEY) == 0:
-    #         logger.info("Hurrah! Done merging Metro PDFs.")
-
-    import signal
     stopper = threading.Event()
     worker = ProcessMessage(stopper, 'worker')
 
@@ -189,12 +166,12 @@ def queue_daemon():
 
     signal.signal(signal.SIGINT, signalHandler)
     signal.signal(signal.SIGTERM, signalHandler)
+    # Custom Timeout error: 2 minutes.
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(120)
 
     logger.info('Starting worker')
     worker.start()
-
-
-
 
 
 def timeout_handler(signum, frame):
