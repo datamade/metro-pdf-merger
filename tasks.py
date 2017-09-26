@@ -3,6 +3,7 @@ from urllib.error import HTTPError
 from io import BytesIO
 from subprocess import call
 import threading
+import multiprocessing
 import signal
 import sys
 from uuid import uuid4
@@ -76,6 +77,7 @@ def makePacket(merged_id, filenames_collection):
                     new_file = exact_file.split('.')[0] + '.pdf'
                     f = open(new_file, 'rb')
                     merger.append(PdfFileReader(f))
+
                     call(['rm', new_file])
                 else:
                     opened_url = urlopen(filename).read()
@@ -122,12 +124,18 @@ def makePacket(merged_id, filenames_collection):
     return merger
 
 
-# Instance of the threading class
-class ProcessMessage(threading.Thread):
+class ChildProcessor(multiprocessing.Process):
+    def __init__(self, msg, **kwargs):
+        super().__init__(**kwargs)
+        self.msg = msg
 
-    stopper = None
+    def run(self):
+        func, key, args, kwargs = loads(self.msg)
+        func(*args, **kwargs)
 
-    def __init__(self, stopper, channel, **kwargs):
+
+class ParentProcessor(threading.Thread):
+    def __init__(self, stopper, **kwargs):
         super().__init__(**kwargs)
 
         self.stopper = stopper
@@ -139,13 +147,17 @@ class ProcessMessage(threading.Thread):
 
     def doWork(self):
         msg = redis.blpop(REDIS_QUEUE_KEY)
-        func, key, args, kwargs = loads(msg[1])
 
-        func(*args, **kwargs)
+        child = ChildProcessor(msg[1])
+        child.start()
+        exited = child.join(timeout=120)
+
+        if exited is None:
+            child.terminate()
 
         if redis.llen(REDIS_QUEUE_KEY) == 0:
             logger.info("Hurrah! Done merging Metro PDFs.")
-
+        
 
 def queue_daemon():
     try:
@@ -159,24 +171,17 @@ def queue_daemon():
         pass
 
     stopper = threading.Event()
-    worker = ProcessMessage(stopper, 'worker')
+    worker = ParentProcessor(stopper)
 
     def signalHandler(signum, frame):
         stopper.set()
         sys.exit(0)
 
     signal.signal(signal.SIGINT, signalHandler)
-    signal.signal(signal.SIGTERM, signalHandler)
-    # Custom Timeout error: 2 minutes.
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(120)
+    signal.signal(signal.SIGTERM, signalHandler)  
 
     logger.info('Starting worker')
     worker.start()
-
-
-def timeout_handler(signum, frame):
-    raise Exception("ERROR: Timeout")
 
 
 def error_logging(attempts, filename):
