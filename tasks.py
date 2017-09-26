@@ -9,7 +9,6 @@ from uuid import uuid4
 from pickle import loads, dumps
 import logging
 import logging.config
-import traceback
 
 from redis import Redis
 
@@ -122,8 +121,10 @@ def makePacket(merged_id, filenames_collection):
 
     return merger
 
+
 # Instance of the threading class
 class ProcessMessage(threading.Thread):
+
     stopper = None
 
     def __init__(self, stopper, channel, **kwargs):
@@ -139,7 +140,7 @@ class ProcessMessage(threading.Thread):
     def doWork(self):
         msg = redis.blpop(REDIS_QUEUE_KEY)
         func, key, args, kwargs = loads(msg[1])
-        
+
         func(*args, **kwargs)
 
         if redis.llen(REDIS_QUEUE_KEY) == 0:
