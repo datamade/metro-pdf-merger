@@ -52,7 +52,7 @@ def document(ocd_id):
     try:
         document = client.get_object(Bucket=S3_BUCKET,
                                      Key='{}.pdf'.format(ocd_id))
-    except botocore.exceptions.ClientError as e:
+    except botocore.exceptions.ClientError:
         response = make_response('Document not found', 404)
     else:
         # This closure just iterates the streaming response from S3 into a
