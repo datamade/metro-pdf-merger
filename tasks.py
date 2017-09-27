@@ -2,13 +2,14 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 from io import BytesIO
 from subprocess import call
+import threading
+import multiprocessing
 import signal
 import sys
 from uuid import uuid4
 from pickle import loads, dumps
 import logging
 import logging.config
-import traceback
 
 from redis import Redis
 
@@ -56,10 +57,6 @@ def queuefunc(f):
 
 @queuefunc
 def makePacket(merged_id, filenames_collection):
-    # Custom Timeout error: 2 minutes.
-    signal.signal(signal.SIGALRM, timeout_handler)
-    signal.alarm(120)
-
     merger = PdfFileMerger(strict=False)
 
     for filename in filenames_collection:
@@ -80,6 +77,7 @@ def makePacket(merged_id, filenames_collection):
                     new_file = exact_file.split('.')[0] + '.pdf'
                     f = open(new_file, 'rb')
                     merger.append(PdfFileReader(f))
+
                     call(['rm', new_file])
                 else:
                     opened_url = urlopen(filename).read()
@@ -126,8 +124,42 @@ def makePacket(merged_id, filenames_collection):
     return merger
 
 
-def queue_daemon():
+class ChildProcessor(multiprocessing.Process):
+    def __init__(self, msg, **kwargs):
+        super().__init__(**kwargs)
+        self.msg = msg
 
+    def run(self):
+        func, key, args, kwargs = loads(self.msg)
+        func(*args, **kwargs)
+
+
+class ParentProcessor(threading.Thread):
+    def __init__(self, stopper, **kwargs):
+        super().__init__(**kwargs)
+
+        self.stopper = stopper
+
+    def run(self):
+        logger.info('Listening for messages...')
+        while not self.stopper.is_set():
+            self.doWork()
+
+    def doWork(self):
+        msg = redis.blpop(REDIS_QUEUE_KEY)
+
+        child = ChildProcessor(msg[1])
+        child.start()
+        exited = child.join(timeout=120)
+
+        if exited is None:
+            child.terminate()
+
+        if redis.llen(REDIS_QUEUE_KEY) == 0:
+            logger.info("Hurrah! Done merging Metro PDFs.")
+
+
+def queue_daemon():
     try:
         # This is really only needed for deployments
         # There might be a better way of doing this
@@ -138,23 +170,18 @@ def queue_daemon():
     except ImportError:
         pass
 
-    while 1:
+    stopper = threading.Event()
+    worker = ParentProcessor(stopper)
 
-        msg = redis.blpop(REDIS_QUEUE_KEY)
-        func, key, args, kwargs = loads(msg[1])
-        try:
-            func(*args, **kwargs)
-        except Exception as e:
-            tb = traceback.format_exc()
-            logger.info(tb)
-            client.captureException()
+    def signalHandler(signum, frame):
+        stopper.set()
+        sys.exit(0)
 
-        if redis.llen(REDIS_QUEUE_KEY) == 0:
-            logger.info("Hurrah! Done merging Metro PDFs.")
+    signal.signal(signal.SIGINT, signalHandler)
+    signal.signal(signal.SIGTERM, signalHandler)
 
-
-def timeout_handler(signum, frame):
-    raise Exception("ERROR: Timeout")
+    logger.info('Starting worker')
+    worker.start()
 
 
 def error_logging(attempts, filename):
