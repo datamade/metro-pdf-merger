@@ -51,11 +51,14 @@ apt-get install libreoffice-impress
 Then, install unoconv from source:
 
 ```bash
+# Do the following as the datamade user:
 mkdir unoconv
 cd unoconv
 wget https://raw.githubusercontent.com/dagwieers/unoconv/master/unoconv
+# Assign read, write, and execute permissions to unoconv source file
+chmod 755 unoconv
 # Make a symbolic link
-sudo ln -s /home/ubuntu/unoconv/unoconv /usr/bin/unoconv
+sudo ln -s /home/datamade/unoconv/unoconv /usr/bin/unoconv
 ```
 
 In the unoconv file, specify the location of Python:
