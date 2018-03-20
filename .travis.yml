@@ -13,7 +13,7 @@ sudo: false
 before_script:
 - cp configs/config.py.travis config.py
 script:
-- flake8 --ignore=E501
+- flake8 --ignore=E501,E722
 notifications:
   webhooks:
   - https://semabot.datamade.us/travis/
