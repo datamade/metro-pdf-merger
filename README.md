@@ -101,9 +101,47 @@ python manage.py compile_pdfs --all_documents
 python manage.py compile_pdfs
 ```
 
+## AWS Buckets
+
+We store the merged PDF packets in an AWS S3 bucket. You may want to test this tool locally, but still send PDFs to AWS. To so, you need to have the right credentials, and you need to tell your app to send PDFs to our test S3 bucket. 
+
+* Go to [https://console.aws.amazon.com/iam/](https://console.aws.amazon.com/iam/), and select your user name.
+* Select "Create Access Key," and download the relevant `.csv` file. 
+* At the root of your local machine (e.g., `~`), add an AWS directory and create two files:
+
+```
+mkdir ~/.aws
+touch ~/.aws/credentials
+touch ~/.aws/config
+```
+
+* Then, add the following:
+
+```
+# ~/.aws/credentials
+[default]
+aws_access_key_id = ****
+aws_secret_access_key = ****
+
+# ~/.aws/config
+[default]
+region = us-east-1
+```
+
+Credentials set!
+
+Finally, tell the app where to save merged PDFs. Add the following to `config.py`:
+
+```
+S3_BUCKET = 'datamade-metro-pdf-merger-testing'
+```
+
+Head over to the AWS console, and watch Metro PDF packets appear! 
+
 ## Team
 
 * Regina Compton, DataMade - developer
+* Eric van Zanten, DataMade - developer
 
 ## Errors / Bugs
 

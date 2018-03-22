@@ -36,4 +36,6 @@ LOGGING = {
     }
 }
 
+S3_BUCKET = ''
+
 DEBUG = True
