@@ -3,6 +3,6 @@ Flask-Cors==3.0.2
 PyPDF2==1.26.0
 requests==2.13.0
 redis==2.10.5
-raven[flask]
+sentry-sdk[flask]==0.10.2
 gunicorn==19.7.1
 boto3==1.4.7
