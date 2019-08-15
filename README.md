@@ -78,6 +78,12 @@ python app.py
 This app uses [Redis](https://redis.io/), a data store that brokers messages between a sender and receiver. You need to [download Redis](https://redis.io/download), first. Then, you can put Redis to "work." In a new terminal tab, run:
 
 ```bash
+redis-server
+```
+
+And in another tab, run:
+
+```bash
 python run_worker.py
 ```
 
@@ -103,10 +109,10 @@ python manage.py compile_pdfs
 
 ## AWS Buckets
 
-We store the merged PDF packets in an AWS S3 bucket. You may want to test this tool locally, but still send PDFs to AWS. To so, you need to have the right credentials, and you need to tell your app to send PDFs to our test S3 bucket. 
+We store the merged PDF packets in an AWS S3 bucket. You may want to test this tool locally, but still send PDFs to AWS. To so, you need to have the right credentials, and you need to tell your app to send PDFs to our test S3 bucket.
 
 * Go to [https://console.aws.amazon.com/iam/](https://console.aws.amazon.com/iam/), and select your user name.
-* Select "Create Access Key," and download the relevant `.csv` file. 
+* Select "Create Access Key," and download the relevant `.csv` file.
 * At the root of your local machine (e.g., `~`), add an AWS directory and create two files:
 
 ```
@@ -136,7 +142,7 @@ Finally, tell the app where to save merged PDFs. Add the following to `config.py
 S3_BUCKET = 'datamade-metro-pdf-merger-testing'
 ```
 
-Head over to the AWS console, and watch Metro PDF packets appear! 
+Head over to the AWS console, and watch Metro PDF packets appear!
 
 ## Team
 
@@ -158,7 +164,3 @@ Report it here: https://github.com/datamade/nyc-councilmatic/issues
 ## Copyright
 
 Copyright (c) 2017 DataMade. Released under the [MIT License](https://github.com/datamade/nyc-councilmatic/blob/master/LICENSE).
-
-
-
-
