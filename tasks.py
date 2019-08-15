@@ -15,19 +15,18 @@ from redis import Redis
 
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
-from raven import Client
+from sentry_sdk import capture_exception
 
 from subprocess import check_output, CalledProcessError
 
 import boto3
 
-from config import REDIS_QUEUE_KEY, LOGGING, SENTRY_DSN, S3_BUCKET
+from config import REDIS_QUEUE_KEY, LOGGING, S3_BUCKET
 
 redis = Redis()
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)
-client = Client(SENTRY_DSN)
 
 
 class DelayedResult(object):
@@ -119,7 +118,7 @@ def makePacket(merged_id, filenames_collection):
         logger.info(("Successful merge! {}").format(merged_id))
     except:
         logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
-        client.captureException()
+        capture_exception()
 
     return merger
 
@@ -189,4 +188,4 @@ def error_logging(attempts, filename):
         logger.info('Trying again...')
     else:
         logger.error(("Something went wrong. Please look at {}. \n").format(filename))
-        client.captureException()
+        capture_exception()
