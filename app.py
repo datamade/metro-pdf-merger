@@ -66,7 +66,7 @@ def document(ocd_id):
         # streaming response from this route. That way we don't have to read
         # anything into memory
         def generate_response(doc):
-            while True:
+            while doc._amount_read < int(doc._content_length):
                 yield doc.read(4096)
 
         response = Response(generate_response(document['Body']))
