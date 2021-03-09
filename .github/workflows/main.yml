@@ -9,6 +9,9 @@ on:
       - master
 
 jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-14.04
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.4
