@@ -71,6 +71,7 @@ def makePacket(merged_id, filenames_collection):
                     except CalledProcessError as call_err:
                         logger.info('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
                         logger.info(call_err)
+                        error_logging(attempts, filename)
 
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
@@ -103,22 +104,27 @@ def makePacket(merged_id, filenames_collection):
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
                 error_logging(attempts, filename)
 
-    # 'merger' is a PdfFileMerger object, which can be written to a new file like so:
     try:
         merged = BytesIO()
         merger.write(merged)
         merged.seek(0)
 
+    except SystemExit:
+        logger.critical('System exited while writing merged files {} as bytes'.format(filenames_collection))
+        raise SystemExit(1)
+
+    except Exception:
+        logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
+        capture_exception()
+
+    else:
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(S3_BUCKET)
         s3_key = bucket.Object('{id}.pdf'.format(id=merged_id))
         s3_key.upload_fileobj(merged)
         s3_key.Acl().put(ACL='public-read')
 
-        logger.info(("Successful merge! {}").format(merged_id))
-    except:
-        logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
-        capture_exception()
+    logger.info(("Successful merge! {}").format(merged_id))
 
     return merger
 
@@ -174,7 +180,7 @@ def queue_daemon():
 
     def signalHandler(signum, frame):
         stopper.set()
-        sys.exit(0)
+        sys.exit(1)
 
     signal.signal(signal.SIGINT, signalHandler)
     signal.signal(signal.SIGTERM, signalHandler)
