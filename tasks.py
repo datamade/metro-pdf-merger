@@ -103,6 +103,9 @@ def makePacket(merged_id, filenames_collection):
                 attempts += 1
                 logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
                 error_logging(attempts, filename)
+            except:
+                capture_exception()
+                raise
 
     try:
         merged = BytesIO()
@@ -111,6 +114,7 @@ def makePacket(merged_id, filenames_collection):
 
     except SystemExit:
         logger.critical('System exited while writing merged files {} as bytes'.format(filenames_collection))
+        capture_exception()
         raise SystemExit(1)
 
     except Exception:
@@ -124,7 +128,7 @@ def makePacket(merged_id, filenames_collection):
         s3_key.upload_fileobj(merged)
         s3_key.Acl().put(ACL='public-read')
 
-    logger.info(("Successful merge! {}").format(merged_id))
+        logger.info(("Successful merge! {}").format(merged_id))
 
     return merger
 
