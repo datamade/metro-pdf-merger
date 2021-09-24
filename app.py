@@ -4,9 +4,6 @@ from flask_cors import cross_origin
 import json
 from redis import Redis
 
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-
 import boto3
 import botocore
 
@@ -17,11 +14,6 @@ app = Flask(__name__)
 app.config.from_object('config')
 
 redis = Redis()
-
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    integrations=[FlaskIntegration()]
-)
 
 
 @app.route('/')

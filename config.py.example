@@ -1,11 +1,26 @@
+import sentry_sdk
+from sentry_sdk.integrations.flask import FlaskIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration
+
+
+DEBUG = True
+
+# Reference for logging setup:
+# https://github.com/getsentry/sentry-python/issues/228#issuecomment-480709424
+
 SENTRY_DSN = ''
 
-REDIS_QUEUE_KEY = 'metro_merger'
+sentry_sdk.init(
+    dsn=SENTRY_DSN,
+    integrations=[
+        LoggingIntegration(event_level=None, level=None),
+        FlaskIntegration()
+    ]
+)
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
-
     'formatters': {
         'all': {
             'format': '[%(asctime)s][%(levelname)s] '
@@ -25,17 +40,22 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'all',
         },
+        'sentry': {
+            'level': 'WARNING',
+            'class': 'sentry_sdk.integrations.logging.EventHandler',
+        },
     },
-
     'loggers': {
         'tasks': {
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
-            'propagate': False,
-            },
-    }
+            'propagate': True,
+        },
+    },
 }
 
-S3_BUCKET = ''
+if SENTRY_DSN:
+    LOGGING['loggers']['tasks']['handlers'].append('sentry')
 
-DEBUG = True
+REDIS_QUEUE_KEY = 'metro_merger'
+S3_BUCKET = 'datamade-metro-pdf-merger'
