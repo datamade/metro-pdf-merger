@@ -118,8 +118,7 @@ def makePacket(merged_id, filenames_collection):
         raise SystemExit(1)
 
     except Exception:
-        logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
-        capture_exception()
+        logger.exception(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
 
     else:
         s3 = boto3.resource('s3')
@@ -170,6 +169,12 @@ class ParentProcessor(threading.Thread):
 
 def queue_daemon():
     try:
+        raise
+    except:
+        logger.critical('foo')
+        sys.exit()
+
+    try:
         # This is really only needed for deployments
         # There might be a better way of doing this
         from deployment import DEPLOYMENT_ID
@@ -197,5 +202,4 @@ def error_logging(attempts, filename):
     if attempts < 2:
         logger.info('Trying again...')
     else:
-        logger.error(("Something went wrong. Please look at {}. \n").format(filename))
-        capture_exception()
+        logger.exception(("Something went wrong. Please look at {}. \n").format(filename))
