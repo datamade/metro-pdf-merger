@@ -10,10 +10,14 @@ DEBUG = True
 
 SENTRY_DSN = ''
 
+# Set an event_level of None so Sentry respects the log level configured for the
+# sentry handler in the LOGGING dict, below. Include events with a level of INFO
+# or above as breadcrumbs in events.
+
 sentry_sdk.init(
     dsn=SENTRY_DSN,
     integrations=[
-        LoggingIntegration(event_level=None, level=None),
+        LoggingIntegration(event_level=None, level='INFO'),
         FlaskIntegration()
     ]
 )
@@ -41,7 +45,7 @@ LOGGING = {
             'formatter': 'all',
         },
         'sentry': {
-            'level': 'WARNING',
+            'level': 'ERROR',
             'class': 'sentry_sdk.integrations.logging.EventHandler',
         },
     },

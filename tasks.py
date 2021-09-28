@@ -67,8 +67,8 @@ def makePacket(merged_id, filenames_collection):
                         check_output(['unoconv', '-f', 'pdf', filename])
                         logger.info('Successful conversion!')
                     except CalledProcessError as call_err:
-                        logger.info('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
-                        logger.info(call_err)
+                        logger.warning('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
+                        logger.warning(call_err)
                         error_logging(attempts, filename)
 
                     path, keyword, exact_file = filename.partition('attachments/')
