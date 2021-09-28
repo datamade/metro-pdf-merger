@@ -7,7 +7,7 @@ from redis import Redis
 import boto3
 import botocore
 
-from config import SENTRY_DSN, S3_BUCKET
+from config import S3_BUCKET
 from tasks import makePacket
 
 app = Flask(__name__)

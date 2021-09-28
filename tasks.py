@@ -15,8 +15,6 @@ from redis import Redis
 
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
-from sentry_sdk import capture_exception
-
 from subprocess import check_output, CalledProcessError
 
 import boto3
@@ -97,14 +95,14 @@ def makePacket(merged_id, filenames_collection):
                 break
             except HTTPError as err:
                 attempts += 1
-                logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
+                logger.warning("\n {0} caused the following error: \n {1}".format(filename, err))
                 error_logging(attempts, filename)
             except FileNotFoundError as err:
                 attempts += 1
-                logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
+                logger.warning("\n {0} caused the following error: \n {1}".format(filename, err))
                 error_logging(attempts, filename)
             except:
-                capture_exception()
+                logger.warning('Encountered unexpected error while converting {}'.format(filename))
                 raise
 
     try:
@@ -113,8 +111,7 @@ def makePacket(merged_id, filenames_collection):
         merged.seek(0)
 
     except SystemExit:
-        logger.critical('System exited while writing merged files {} as bytes'.format(filenames_collection))
-        capture_exception()
+        logger.exception('System exited while writing merged files {} as bytes'.format(filenames_collection))
         raise SystemExit(1)
 
     except Exception:
@@ -168,11 +165,6 @@ class ParentProcessor(threading.Thread):
 
 
 def queue_daemon():
-    try:
-        raise
-    except:
-        logger.critical('foo')
-        sys.exit()
 
     try:
         # This is really only needed for deployments
@@ -202,4 +194,4 @@ def error_logging(attempts, filename):
     if attempts < 2:
         logger.info('Trying again...')
     else:
-        logger.exception(("Something went wrong. Please look at {}. \n").format(filename))
+        logger.exception("Something went wrong. Please look at {}. \n".format(filename))
