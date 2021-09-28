@@ -11,8 +11,8 @@ DEBUG = True
 SENTRY_DSN = ''
 
 # Set an event_level of None so Sentry respects the log level configured for the
-# sentry handler in the LOGGING dict, below. Include events with a level of INFO
-# or above as breadcrumbs in events.
+# sentry handler in the LOGGING dict, below. Include messages with a level of
+# INFO or above as breadcrumbs in events logged to Sentry.
 
 sentry_sdk.init(
     dsn=SENTRY_DSN,
