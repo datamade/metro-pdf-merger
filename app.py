@@ -4,24 +4,16 @@ from flask_cors import cross_origin
 import json
 from redis import Redis
 
-import sentry_sdk
-from sentry_sdk.integrations.flask import FlaskIntegration
-
 import boto3
 import botocore
 
-from config import SENTRY_DSN, S3_BUCKET
+from config import S3_BUCKET
 from tasks import makePacket
 
 app = Flask(__name__)
 app.config.from_object('config')
 
 redis = Redis()
-
-sentry_sdk.init(
-    dsn=SENTRY_DSN,
-    integrations=[FlaskIntegration()]
-)
 
 
 @app.route('/')

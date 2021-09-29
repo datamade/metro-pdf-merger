@@ -15,8 +15,6 @@ from redis import Redis
 
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
-from sentry_sdk import capture_exception
-
 from subprocess import check_output, CalledProcessError
 
 import boto3
@@ -69,8 +67,8 @@ def makePacket(merged_id, filenames_collection):
                         check_output(['unoconv', '-f', 'pdf', filename])
                         logger.info('Successful conversion!')
                     except CalledProcessError as call_err:
-                        logger.info('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
-                        logger.info(call_err)
+                        logger.warning('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
+                        logger.warning(call_err)
                         error_logging(attempts, filename)
 
                     path, keyword, exact_file = filename.partition('attachments/')
@@ -97,14 +95,14 @@ def makePacket(merged_id, filenames_collection):
                 break
             except HTTPError as err:
                 attempts += 1
-                logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
+                logger.warning("\n {0} caused the following error: \n {1}".format(filename, err))
                 error_logging(attempts, filename)
             except FileNotFoundError as err:
                 attempts += 1
-                logger.error(("\n {0} caused the following error: \n {1}").format(filename, err))
+                logger.warning("\n {0} caused the following error: \n {1}".format(filename, err))
                 error_logging(attempts, filename)
             except:
-                capture_exception()
+                logger.warning('Encountered unexpected error while converting {}'.format(filename))
                 raise
 
     try:
@@ -113,13 +111,11 @@ def makePacket(merged_id, filenames_collection):
         merged.seek(0)
 
     except SystemExit:
-        logger.critical('System exited while writing merged files {} as bytes'.format(filenames_collection))
-        capture_exception()
+        logger.exception('System exited while writing merged files {} as bytes'.format(filenames_collection))
         raise SystemExit(1)
 
     except Exception:
-        logger.error(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
-        capture_exception()
+        logger.exception(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
 
     else:
         s3 = boto3.resource('s3')
@@ -169,6 +165,7 @@ class ParentProcessor(threading.Thread):
 
 
 def queue_daemon():
+
     try:
         # This is really only needed for deployments
         # There might be a better way of doing this
@@ -197,5 +194,4 @@ def error_logging(attempts, filename):
     if attempts < 2:
         logger.info('Trying again...')
     else:
-        logger.error(("Something went wrong. Please look at {}. \n").format(filename))
-        capture_exception()
+        logger.exception("Something went wrong. Please look at {}. \n".format(filename))
