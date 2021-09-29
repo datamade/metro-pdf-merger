@@ -1,3 +1,5 @@
+import os
+
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
@@ -61,5 +63,6 @@ LOGGING = {
 if SENTRY_DSN:
     LOGGING['loggers']['tasks']['handlers'].append('sentry')
 
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_QUEUE_KEY = 'metro_merger'
 S3_BUCKET = 'datamade-metro-pdf-merger'

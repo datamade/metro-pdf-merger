@@ -19,9 +19,9 @@ from subprocess import check_output, CalledProcessError
 
 import boto3
 
-from config import REDIS_QUEUE_KEY, LOGGING, S3_BUCKET
+from config import REDIS_HOST, REDIS_QUEUE_KEY, LOGGING, S3_BUCKET
 
-redis = Redis()
+redis = Redis(host=REDIS_HOST)
 
 logging.config.dictConfig(LOGGING)
 logger = logging.getLogger(__name__)

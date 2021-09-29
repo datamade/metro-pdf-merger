@@ -1,0 +1,39 @@
+version: '2.4'
+
+services:
+  app:
+    image: metro-pdf-merger
+    container_name: metro-pdf-merger
+    build: .
+    stdin_open: true
+    tty: true
+    ports:
+      - 5000:5000
+    volumes:
+      - .:/app
+      - ${PWD}/config.py.example:/app/config.py
+    command: python app.py
+
+  worker:
+    image: metro-pdf-merger
+    container_name: metro-pdf-merger-worker
+    build: .
+    stdin_open: true
+    tty: true
+    depends_on:
+      app:
+        condition: service_started
+      redis:
+        condition: service_started
+    volumes:
+      - .:/app
+      - ${PWD}/config.py.example:/app/config.py
+    environment:
+      - REDIS_HOST=redis
+    command: python run_worker.py
+
+  redis:
+    container_name: metro-pdf-merger-redis
+    image: redis:2.8
+    ports:
+      - 6379:6379
