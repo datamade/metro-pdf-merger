@@ -56,6 +56,8 @@ def queuefunc(f):
 def makePacket(merged_id, filenames_collection):
     merger = PdfFileMerger(strict=False)
 
+    open_files = []
+
     for filename in filenames_collection:
         # Run this up to two times, in the event of a timeout, libreoffice RunTimeError ('Office probably died'), or other exception.
         attempts = 0
@@ -75,6 +77,7 @@ def makePacket(merged_id, filenames_collection):
                     new_file = exact_file.split('.')[0] + '.pdf'
                     f = open(new_file, 'rb')
                     merger.append(PdfFileReader(f))
+                    open_files.append(f)
 
                     call(['rm', new_file])
                 else:
@@ -88,6 +91,7 @@ def makePacket(merged_id, filenames_collection):
                         new_file = exact_file.split('.')[0] + '.pdf'
                         f = open(new_file, 'rb')
                         merger.append(PdfFileReader(f))
+                        open_files.append(f)
                         call(['rm', new_file])
                 if attempts >= 1:
                     logger.info('Phew! It worked on the second try.')
@@ -125,6 +129,9 @@ def makePacket(merged_id, filenames_collection):
         s3_key.Acl().put(ACL='public-read')
 
         logger.info(("Successful merge! {}").format(merged_id))
+
+    for f in open_files:
+        f.close()
 
     return merger
 
