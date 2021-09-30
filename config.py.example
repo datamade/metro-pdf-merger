@@ -65,4 +65,4 @@ if SENTRY_DSN:
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
 REDIS_QUEUE_KEY = 'metro_merger'
-S3_BUCKET = 'datamade-metro-pdf-merger'
+S3_BUCKET = 'datamade-metro-pdf-merger-testing'

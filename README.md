@@ -1,6 +1,6 @@
 # Metro PDF Merger
 
-A flask app that listens for requests from [LA Metro Councilmatic](https://github.com/datamade/la-metro-councilmatic). The app consolidates PDFs for Board Reports and Events, stores the merged documents, and provides a route that returns PDFs.
+A Flask app that listens for requests from [LA Metro Councilmatic](https://github.com/datamade/la-metro-councilmatic). The app consolidates PDFs for Board Reports and Events, stores the merged documents, and provides a route that returns PDFs.
 
 ## Working with a local instance of LA Metro Councilmatic
 
