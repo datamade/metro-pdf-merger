@@ -12,3 +12,5 @@ config.py
 /configs/supervisor_template.conf
 /scripts/after_install.sh
 /scripts/app_start.sh
+
+.env

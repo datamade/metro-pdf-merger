@@ -7,13 +7,13 @@ from redis import Redis
 import boto3
 import botocore
 
-from config import S3_BUCKET
+from config import REDIS_HOST, S3_BUCKET
 from tasks import makePacket
 
 app = Flask(__name__)
 app.config.from_object('config')
 
-redis = Redis()
+redis = Redis(host=REDIS_HOST)
 
 
 @app.route('/')
@@ -69,5 +69,4 @@ def document(ocd_id):
 
 
 if __name__ == "__main__":
-
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True, host='0.0.0.0')
