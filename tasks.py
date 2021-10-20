@@ -16,10 +16,12 @@ from redis import Redis
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 from subprocess import check_output, CalledProcessError
+import resource
 
 import boto3
 
-from config import REDIS_HOST, REDIS_QUEUE_KEY, LOGGING, S3_BUCKET
+from config import REDIS_QUEUE_KEY, LOGGING, S3_BUCKET, REDIS_HOST
+
 
 redis = Redis(host=REDIS_HOST)
 
@@ -52,6 +54,16 @@ def queuefunc(f):
     return f
 
 
+MAX_VIRTUAL_MEMORY = 1 * 1024 * 1024 # 1 MB
+
+def limit_virtual_memory():
+    # The tuple below is of the form (soft limit, hard limit). Limit only
+    # the soft part so that the limit can be increased later (setting also
+    # the hard limit would prevent that).
+    # When the limit cannot be changed, setrlimit() raises ValueError.
+    logger.info('Limiting memory to {}'.format(MAX_VIRTUAL_MEMORY))
+    resource.setrlimit(resource.RLIMIT_AS, (MAX_VIRTUAL_MEMORY, resource.RLIM_INFINITY))
+
 @queuefunc
 def makePacket(merged_id, filenames_collection):
     merger = PdfFileMerger(strict=False)
@@ -64,14 +76,19 @@ def makePacket(merged_id, filenames_collection):
         while attempts < 2:
             try:
                 if filename.lower().endswith(('.xlsx', '.doc', '.docx', '.ppt', '.pptx', '.rtf')) or filename in ['http://metro.legistar1.com/metro/attachments/6aaadb7d-4c9a-429b-a499-2107bc9d031e.pdf', 'http://metro.legistar1.com/metro/attachments/2146cf74-8a70-4d48-8a73-94f21a40106d.pdf', 'http://metro.legistar1.com/metro/attachments/c1fae640-108f-411d-9790-204eb7b9efbb.pdf']:
+                    out = None
                     try:
-                        logger.info('Unoconv conversion underway...')
-                        check_output(['unoconv', '-f', 'pdf', filename])
+                        logger.info('Unoconv conversion underway... {}'.format(filename))
+                        out = check_output(['unoconv', '-f', 'pdf', filename], preexec_fn=limit_virtual_memory)
+                        logger.info('Unoconv ran with limited memory')
                         logger.info('Successful conversion!')
                     except CalledProcessError as call_err:
                         logger.warning('Unsuccessful conversion. We had some difficulty with {}'.format(filename))
                         logger.warning(call_err)
                         error_logging(attempts, filename)
+
+                    logger.info(out or '')
+                    logger.info('Adding converted file')
 
                     path, keyword, exact_file = filename.partition('attachments/')
                     new_file = exact_file.split('.')[0] + '.pdf'
@@ -86,7 +103,8 @@ def makePacket(merged_id, filenames_collection):
                         merger.append(BytesIO(opened_url), import_bookmarks=False)
                     except:
                         # For PDFs with a little extra garbage, we need to open, save, and re-convert them.
-                        call(['unoconv', '-f', 'pdf', filename])
+                        check_output(['unoconv', '-f', 'pdf', filename], preexec_fn=limit_virtual_memory)
+                        logger.info('Unoconv ran with limited memory')
                         path, keyword, exact_file = filename.partition('attachments/')
                         new_file = exact_file.split('.')[0] + '.pdf'
                         f = open(new_file, 'rb')
@@ -122,11 +140,11 @@ def makePacket(merged_id, filenames_collection):
         logger.exception(("{0} caused the failure of writing {1} as a PDF, and we could not merge this file collection: \n {2}").format(sys.exc_info()[0], merged_id, filenames_collection))
 
     else:
-        s3 = boto3.resource('s3')
-        bucket = s3.Bucket(S3_BUCKET)
-        s3_key = bucket.Object('{id}.pdf'.format(id=merged_id))
-        s3_key.upload_fileobj(merged)
-        s3_key.Acl().put(ACL='public-read')
+#        s3 = boto3.resource('s3')
+#        bucket = s3.Bucket(S3_BUCKET)
+#        s3_key = bucket.Object('{id}.pdf'.format(id=merged_id))
+#        s3_key.upload_fileobj(merged)
+#        s3_key.Acl().put(ACL='public-read')
 
         logger.info(("Successful merge! {}").format(merged_id))
 
@@ -162,9 +180,10 @@ class ParentProcessor(threading.Thread):
 
         child = ChildProcessor(msg[1])
         child.start()
-        exited = child.join(timeout=120)
+        exited = child.join(timeout=60*10)
 
         if exited is None:
+            logger.info('Terminating child')
             child.terminate()
 
         if redis.llen(REDIS_QUEUE_KEY) == 0:
