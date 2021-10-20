@@ -62,4 +62,6 @@ if SENTRY_DSN:
     LOGGING['loggers']['tasks']['handlers'].append('sentry')
 
 REDIS_QUEUE_KEY = 'metro_merger'
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+
 S3_BUCKET = 'datamade-metro-pdf-merger'
