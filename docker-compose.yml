@@ -27,14 +27,15 @@ services:
     build: .
     stdin_open: true
     tty: true
-    depends_on:
-      redis:
-        condition: service_started
+#    depends_on:
+#      redis:
+#        condition: service_started
     volumes:
       - .:/app
       - ${PWD}/config.py.example:/app/config.py
     environment:
-      - REDIS_HOST=redis
+      # - REDIS_HOST=redis
+      - REDIS_HOST=host.docker.internal
     env_file:
       - .env
     command: python run_worker.py
