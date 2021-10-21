@@ -1,6 +1,6 @@
 '''
 Download specified attachments into the attachments/ directory and return
-space-delimited list of attachment filenames, all with the PDF file extension.
+space-delimited list of attachment filenames.
 
 Can use scrapelib for retrying requests.
 
@@ -9,4 +9,4 @@ Some options: https://www.astronomer.io/guides/airflow-passing-data-between-task
 '''
 import sys
 
-sys.stdout.write('attachments/foo.pdf attachments/bar.pdf')
+sys.stdout.write('attachments/foo.xlsx attachments/bar.doc attachments/baz.pdf')
